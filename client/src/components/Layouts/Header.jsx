@@ -1,7 +1,24 @@
 import React from "react";
 import { Link, NavLink } from "react-router-dom";
+import { useAuth } from "../../context/auth.context";
+import toast from "react-hot-toast";
 
 function Header() {
+  const [auth, setAuth] = useAuth();
+
+  console.log(auth.user);
+
+  const logOut = () => {
+    setAuth({
+      ...auth,
+      user: null,
+      token: "",
+    });
+
+    localStorage.removeItem("auth");
+    toast.success(`See You Soon!`);
+  };
+
   return (
     <>
       <nav className="navbar navbar-expand-lg bg-body-tertiary">
@@ -22,16 +39,61 @@ function Header() {
               🛍️ Brand Bazar
             </Link>
             <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
-              <li className="nav-item">
-                <Link className="nav-link " aria-current="page" to={"/register"}>
-                  Register
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to={"/login"}>
-                  Login
-                </Link>
-              </li>
+              {!auth.user ? (
+                <>
+                  <li className="nav-item">
+                    <Link
+                      className="nav-link "
+                      aria-current="page"
+                      to={"/register"}
+                    >
+                      Register
+                    </Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to={"/login"}>
+                      Login
+                    </Link>
+                  </li>
+                </>
+              ) : (
+                <>
+                  {" "}
+                  <li class="nav-item dropdown">
+                    <Link
+                      class="nav-link dropdown-toggle"
+                      href="#"
+                      role="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      {auth?.user.name}
+                    </Link>
+                    <ul class="dropdown-menu" style={{ marginTop: "9px" }}>
+                      <li>
+                        <Link
+                          class="dropdown-item"
+                          to={`/dashboard/${
+                            auth?.user?.role === 1 ? "admin" : "user"
+                          }`}
+                        >
+                          Dashboard
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          className="dropdown-item"
+                          to={"/login"}
+                          onClick={logOut}
+                        >
+                          Logout
+                        </Link>
+                      </li>
+                    </ul>
+                  </li>
+                </>
+              )}
+
               <li className="nav-item">
                 <Link className="nav-link" aria-current="page" to={"/category"}>
                   Category

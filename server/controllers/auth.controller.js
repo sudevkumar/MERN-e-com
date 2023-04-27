@@ -21,9 +21,9 @@ const registerController = async (req, res) => {
     if (!address) {
       return res.send({ msg: "Address is Required" });
     }
-    // if (!answer) {
-    //   return res.send({ msg: "Answer is Required" });
-    // }
+    if (!answer) {
+      return res.send({ msg: "Answer is Required" });
+    }
     //check user
     const exisitingUser = await userModel.findOne({ email });
     //exisiting user
@@ -42,6 +42,7 @@ const registerController = async (req, res) => {
       phone,
       address,
       password: hashedPassword,
+      answer,
     }).save();
 
     res.status(201).send({
@@ -92,10 +93,12 @@ const loginController = async (req, res) => {
       success: true,
       msg: "login successfully",
       user: {
+        _id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
         address: user.address,
+        role: user.role,
       },
       token,
     });
@@ -115,4 +118,48 @@ const testController = (req, res) => {
   res.send("Protected");
 };
 
-export { registerController, loginController, testController };
+// Forget password
+
+const forgetPasswordController = async (req, res) => {
+  try {
+    const { email, answer, newPassword } = req.body;
+    if (!email) {
+      res.status(400).send({ message: "Emai is required" });
+    }
+    if (!answer) {
+      res.status(400).send({ message: "answer is required" });
+    }
+    if (!newPassword) {
+      res.status(400).send({ message: "New Password is required" });
+    }
+    //check
+    const user = await userModel.findOne({ email, answer });
+    //validation
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "Wrong Email Or Answer",
+      });
+    }
+    const hashed = await hashPassword(newPassword);
+    await userModel.findByIdAndUpdate(user._id, { password: hashed });
+    res.status(200).send({
+      success: true,
+      message: "Password Reset Successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Something went wrong",
+      error,
+    });
+  }
+};
+
+export {
+  registerController,
+  loginController,
+  testController,
+  forgetPasswordController,
+};
